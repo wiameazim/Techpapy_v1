@@ -7,7 +7,8 @@
 ☁️ [Guide de déploiement GCP](DEPLOIEMENT_GCP.docx) ·
 ⚙️ [Configuration CI/CD](CI_CD_SETUP.docx) ·
 📊 [Monitoring sur GCP](MONITORING_GCP.docx) ·
-🎤 [Présentation (PowerPoint)](TechPapy_Presentation.pptx)
+🎤 [Présentation (PowerPoint)](TechPapy_Presentation.pptx) ·
+✅ [Backlog (Excel)](Backlog_TechPapy.xlsx)
 
 ## Stack
 
