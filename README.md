@@ -104,3 +104,10 @@ npm run test --workspace=apps/api   # nécessite Postgres (voir docker-compose)
 ## Domaine (Prisma)
 
 `User`, `Skill` (offerte/recherchée), `Match`, `Session`, `PointsLedger`, `Badge`, `KnowledgeArticle`, `AuditLog` — voir [apps/api/prisma/schema.prisma](apps/api/prisma/schema.prisma).
+
+## Stratégie de branches
+
+- **`main`** — toujours déployable, protégée, reçoit uniquement des merges depuis `develop`.
+- **`develop`** — branche d'intégration pour le travail en cours.
+- Pour une nouvelle fonctionnalité : partir de `develop`, créer `feature/nom-de-la-feature`, ouvrir une pull request vers `develop`.
+- La CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) tourne sur les push/PR vers `main` et `develop`.
