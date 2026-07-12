@@ -8,7 +8,16 @@ import { SkillsPanel } from "@/components/dashboard/skills-panel";
 import { CommunityPanel } from "@/components/dashboard/community-panel";
 import { MatchesPanel } from "@/components/dashboard/matches-panel";
 import { PointsHistory } from "@/components/dashboard/points-history";
-import { api, type Match, type Me, type PointsEntry, type Skill, type SkillType } from "@/lib/api";
+import { BadgesPanel } from "@/components/dashboard/badges-panel";
+import {
+  api,
+  type BadgeCatalogueEntry,
+  type Match,
+  type Me,
+  type PointsEntry,
+  type Skill,
+  type SkillType,
+} from "@/lib/api";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,19 +25,22 @@ export default function DashboardPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [points, setPoints] = useState<PointsEntry[]>([]);
+  const [badgeCatalogue, setBadgeCatalogue] = useState<BadgeCatalogueEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
-    const [meRes, skillsRes, matchesRes, pointsRes] = await Promise.all([
+    const [meRes, skillsRes, matchesRes, pointsRes, badgesRes] = await Promise.all([
       api.me(),
       api.listSkills(),
       api.listMatches(),
       api.myPoints(),
+      api.listBadges(),
     ]);
     setUser(meRes.user);
     setSkills(skillsRes.skills);
     setMatches(matchesRes.matches);
     setPoints(pointsRes.entries);
+    setBadgeCatalogue(badgesRes.badges);
   }, []);
 
   useEffect(() => {
@@ -126,6 +138,14 @@ export default function DashboardPage() {
             onComplete={onComplete}
           />
           <PointsHistory entries={points} />
+        </div>
+
+        <div className="mt-6">
+          <BadgesPanel
+            catalogue={badgeCatalogue}
+            earnedNames={new Set(user.badges.map((b) => b.badge.name))}
+            points={user.points}
+          />
         </div>
       </div>
     </main>

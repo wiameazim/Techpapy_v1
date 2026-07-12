@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../lib/asyncHandler";
 import { HttpError } from "../middleware/errorHandler";
 import { AuthedRequest, requireAuth } from "../middleware/auth";
+import { awardBadges } from "../lib/badges";
 
 export const sessionsRouter = Router();
 
@@ -82,10 +83,11 @@ sessionsRouter.patch(
         await tx.pointsLedger.create({
           data: { userId, delta: 1, reason: "Session d'échange complétée" },
         });
-        await tx.user.update({
+        const updatedUser = await tx.user.update({
           where: { id: userId },
           data: { points: { increment: 1 } },
         });
+        await awardBadges(tx, userId, updatedUser.points);
       }
 
       return completed;

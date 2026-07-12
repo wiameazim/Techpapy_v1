@@ -89,6 +89,12 @@ export type Me = {
 
 export type PointsEntry = { id: string; delta: number; reason: string; createdAt: string };
 
+export type BadgeCatalogueEntry = {
+  name: string;
+  description: string;
+  pointsRequired: number;
+};
+
 async function withToken(promise: Promise<AuthResponse>) {
   const result = await promise;
   setAccessToken(result.accessToken);
@@ -119,6 +125,7 @@ export const api = {
 
   me: () => request<{ user: Me }>("/api/me"),
   myPoints: () => request<{ entries: PointsEntry[] }>("/api/me/points"),
+  listBadges: () => request<{ badges: BadgeCatalogueEntry[] }>("/api/badges"),
 
   listSkills: (type?: SkillType) =>
     request<{ skills: Skill[] }>(`/api/skills${type ? `?type=${type}` : ""}`),
