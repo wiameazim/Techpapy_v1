@@ -105,6 +105,65 @@ export type Article = {
   updatedAt: string;
 };
 
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  points: number;
+  createdAt: string;
+};
+
+export type AdminBadge = {
+  id: string;
+  name: string;
+  description: string;
+  _count: { users: number };
+};
+
+export type AdminUserBadge = {
+  userId: string;
+  badgeId: string;
+  awardedAt: string;
+  user: { id: string; name: string };
+  badge: { id: string; name: string };
+};
+
+export type AdminPointsEntry = {
+  id: string;
+  userId: string;
+  delta: number;
+  reason: string;
+  createdAt: string;
+  user: { id: string; name: string };
+};
+
+export type AuditLog = {
+  id: string;
+  userId: string | null;
+  action: string;
+  ip: string | null;
+  userAgent: string | null;
+  metadata: unknown;
+  createdAt: string;
+};
+
+export type AdminSession = SessionItem & {
+  match: { id: string; userA: { id: string; name: string }; userB: { id: string; name: string } };
+};
+
+export type AdminStats = {
+  users: { total: number; admins: number };
+  skills: { total: number };
+  matches: Partial<Record<MatchStatus, number>>;
+  sessions: Partial<Record<SessionStatus, number>>;
+  articles: { total: number };
+  badges: { total: number };
+  pointsDistributed: number;
+  signupsByDay: { date: string; count: number }[];
+  recentAuditLogs: AuditLog[];
+};
+
 async function withToken(promise: Promise<AuthResponse>) {
   const result = await promise;
   setAccessToken(result.accessToken);
@@ -173,4 +232,101 @@ export const api = {
       body: JSON.stringify(data),
     }),
   deleteArticle: (id: string) => request<void>(`/api/articles/${id}`, { method: "DELETE" }),
+
+  admin: {
+    stats: () => request<AdminStats>("/api/admin/stats"),
+    auditLogs: () => request<{ logs: AuditLog[] }>("/api/admin/audit-logs"),
+
+    listUsers: () => request<{ users: AdminUser[] }>("/api/admin/users"),
+    updateUser: (
+      id: string,
+      data: Partial<{ name: string; email: string; role: Role; points: number }>,
+    ) =>
+      request<{ user: AdminUser }>(`/api/admin/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteUser: (id: string) => request<void>(`/api/admin/users/${id}`, { method: "DELETE" }),
+
+    listSkills: () => request<{ skills: Skill[] }>("/api/admin/skills"),
+    createSkill: (data: { name: string; type: SkillType; userId: string }) =>
+      request<{ skill: Skill }>("/api/admin/skills", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateSkill: (id: string, data: Partial<{ name: string; type: SkillType }>) =>
+      request<{ skill: Skill }>(`/api/admin/skills/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteSkill: (id: string) => request<void>(`/api/admin/skills/${id}`, { method: "DELETE" }),
+
+    listMatches: () => request<{ matches: Match[] }>("/api/admin/matches"),
+    createMatch: (data: { userAId: string; userBId: string; status?: MatchStatus }) =>
+      request<{ match: Match }>("/api/admin/matches", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateMatch: (id: string, data: { status: MatchStatus }) =>
+      request<{ match: Match }>(`/api/admin/matches/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteMatch: (id: string) => request<void>(`/api/admin/matches/${id}`, { method: "DELETE" }),
+
+    listSessions: () => request<{ sessions: AdminSession[] }>("/api/admin/sessions"),
+    createSession: (data: { matchId: string; scheduledAt: string; status?: SessionStatus }) =>
+      request<{ session: SessionItem }>("/api/admin/sessions", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateSession: (
+      id: string,
+      data: Partial<{ scheduledAt: string; status: SessionStatus }>,
+    ) =>
+      request<{ session: SessionItem }>(`/api/admin/sessions/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteSession: (id: string) =>
+      request<void>(`/api/admin/sessions/${id}`, { method: "DELETE" }),
+
+    listBadges: () => request<{ badges: AdminBadge[] }>("/api/admin/badges"),
+    createBadge: (data: { name: string; description: string }) =>
+      request<{ badge: AdminBadge }>("/api/admin/badges", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateBadge: (id: string, data: Partial<{ name: string; description: string }>) =>
+      request<{ badge: AdminBadge }>(`/api/admin/badges/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteBadge: (id: string) => request<void>(`/api/admin/badges/${id}`, { method: "DELETE" }),
+
+    listUserBadges: () => request<{ userBadges: AdminUserBadge[] }>("/api/admin/user-badges"),
+    awardBadge: (data: { userId: string; badgeId: string }) =>
+      request<{ userBadge: AdminUserBadge }>("/api/admin/user-badges", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    revokeBadge: (userId: string, badgeId: string) =>
+      request<void>(`/api/admin/user-badges/${userId}/${badgeId}`, { method: "DELETE" }),
+
+    listArticles: () => request<{ articles: Article[] }>("/api/admin/articles"),
+    updateArticle: (id: string, data: Partial<{ title: string; content: string }>) =>
+      request<{ article: Article }>(`/api/admin/articles/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteArticle: (id: string) =>
+      request<void>(`/api/admin/articles/${id}`, { method: "DELETE" }),
+
+    listPointsLedger: () => request<{ entries: AdminPointsEntry[] }>("/api/admin/points-ledger"),
+    createLedgerEntry: (data: { userId: string; delta: number; reason: string }) =>
+      request<{ entry: AdminPointsEntry }>("/api/admin/points-ledger", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+  },
 };

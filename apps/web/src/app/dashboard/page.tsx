@@ -121,6 +121,14 @@ export default function DashboardPage() {
           >
             Base de connaissances
           </Link>
+          {user.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="text-sm font-bold uppercase tracking-wide hover:text-signal"
+            >
+              Administration
+            </Link>
+          )}
           <span className="text-sm font-semibold text-mute">{user.name}</span>
           <Button variant="ghost" onClick={onLogout}>
             Déconnexion
