@@ -5,7 +5,8 @@
 📄 [Documentation fonctionnelle](DOCUMENTATION_FONCTIONNELLE.docx) ·
 📄 [Documentation technique](DOCUMENTATION_TECHNIQUE.docx) ·
 ☁️ [Guide de déploiement GCP](DEPLOIEMENT_GCP.docx) ·
-⚙️ [Configuration CI/CD](CI_CD_SETUP.docx)
+⚙️ [Configuration CI/CD](CI_CD_SETUP.docx) ·
+📊 [Monitoring sur GCP](MONITORING_GCP.docx)
 
 ## Stack
 

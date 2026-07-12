@@ -1,0 +1,29 @@
+groups:
+  - name: techpapy-api
+    rules:
+      - alert: ApiDown
+        expr: up{job="techpapy-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TechPapy API is down"
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TechPapy API 5xx error rate above 5%"
+
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elevated authentication failure rate — possible intrusion attempt"

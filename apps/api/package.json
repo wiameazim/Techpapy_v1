@@ -16,6 +16,7 @@
     "sqlite:migrate": "prisma migrate dev --schema prisma/sqlite/schema.prisma"
   },
   "dependencies": {
+    "@google-cloud/trace-agent": "^8.0.0",
     "@prisma/client": "^6.3.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",

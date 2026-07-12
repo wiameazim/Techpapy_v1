@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: techpapy-api
+    scheme: https
+    metrics_path: /metrics
+    static_configs:
+      # Replace with the real Cloud Run URL (or the custom domain once mapped).
+      - targets: ["techpapy-api-7ytq3d6awq-ew.a.run.app"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
