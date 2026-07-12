@@ -16,3 +16,4 @@ apps/api/prisma/sqlite/dev.db-journal
 ~$*.pptx
 ~$*.docx
 ~$*.xlsx
+.claude/
