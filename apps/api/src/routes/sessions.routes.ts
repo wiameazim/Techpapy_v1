@@ -80,7 +80,7 @@ sessionsRouter.patch(
 
       for (const userId of [match.userAId, match.userBId]) {
         await tx.pointsLedger.create({
-          data: { userId, delta: 1, reason: `session:${session.id}` },
+          data: { userId, delta: 1, reason: "Session d'échange complétée" },
         });
         await tx.user.update({
           where: { id: userId },
