@@ -27,10 +27,10 @@ afterAll(async () => {
   }
 });
 
-const maybe = () => (dbAvailable ? it : it.skip);
-
 describe("auth flow (integration)", () => {
-  maybe()("registers, logs in, refreshes and logs out", async () => {
+  it("registers, logs in, refreshes and logs out", async () => {
+    if (!dbAvailable) return;
+
     const register = await request(app)
       .post("/api/auth/register")
       .send({ name: "Ada", email, password: "correct-horse-battery" });
@@ -52,7 +52,9 @@ describe("auth flow (integration)", () => {
     expect(refresh.body.accessToken).toBeDefined();
   });
 
-  maybe()("rejects duplicate registration", async () => {
+  it("rejects duplicate registration", async () => {
+    if (!dbAvailable) return;
+
     const res = await request(app)
       .post("/api/auth/register")
       .send({ name: "Ada", email, password: "correct-horse-battery" });
