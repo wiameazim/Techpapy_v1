@@ -1,3 +1,7 @@
+// Absolute backend URL — used only for the direct WebSocket connection
+// (video-room.tsx), which isn't proxied. Plain REST calls below go through
+// this site's own /api/* route instead (see next.config.ts rewrites), so
+// their cookies stay same-site regardless of where the backend is hosted.
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 let accessToken: string | null = null;
@@ -11,7 +15,7 @@ export function getAccessToken() {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(path, {
     ...init,
     credentials: "include",
     headers: {

@@ -86,4 +86,5 @@ jobs:
           gcloud run deploy techpapy-web \
             --image=${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/web:${{ github.sha }} \
             --region=${{ env.REGION }} \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --update-env-vars="API_PROXY_TARGET=${{ secrets.API_URL }}"
