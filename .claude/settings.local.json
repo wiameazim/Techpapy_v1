@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(TMPDIR=\"C:/Users/dell/AppData/Local/Temp/claude/techpapy-clone-tmp\" *)",
+      "Bash(ls -la C:/Users/dell/AppData/Local/Temp/claude/techpapy-clone-tmp)",
+      "Bash(rm -rf .claude)",
+      "Bash(rm -f apps/web/CLAUDE.md apps/web/AGENTS.md apps/web/README.md README.md)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\dell\\AppData\\Local\\Temp\\claude"
+    ]
+  }
+}
