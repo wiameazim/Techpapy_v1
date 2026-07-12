@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options: [staging, production]
+      image_tag:
+        description: Image tag to deploy (defaults to current commit SHA)
+        required: false
+        type: string
+      rollback:
+        description: Roll back to the previous revision instead of deploying image_tag
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+
+      - name: Roll back previous revision
+        if: ${{ inputs.rollback }}
+        run: |
+          kubectl -n techpapy-${{ inputs.environment }} rollout undo deployment/api
+          kubectl -n techpapy-${{ inputs.environment }} rollout undo deployment/web
+          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/api
+          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/web
+
+      - name: Deploy image tag
+        if: ${{ !inputs.rollback }}
+        env:
+          TAG: ${{ inputs.image_tag || github.sha }}
+        run: |
+          kubectl -n techpapy-${{ inputs.environment }} set image deployment/api \
+            api=ghcr.io/${{ github.repository }}/api:$TAG
+          kubectl -n techpapy-${{ inputs.environment }} set image deployment/web \
+            web=ghcr.io/${{ github.repository }}/web:$TAG
+          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/api
+          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/web

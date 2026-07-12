@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+:root {
+  /* the only 2 brand colors in the entire system */
+  --color-ink: #111318;
+  --color-signal: #ffc700;
+
+  /* neutrals only — no other hues allowed */
+  --color-paper: #ffffff;
+  --color-mist: #f2f3f5;
+  --color-line: #d8dadf;
+  --color-mute: #6b6f76;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-signal: var(--color-signal);
+  --color-paper: var(--color-paper);
+  --color-mist: var(--color-mist);
+  --color-line: var(--color-line);
+  --color-mute: var(--color-mute);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* square system: zero radius everywhere */
+  --radius-none: 0px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--color-ink);
+    --foreground: var(--color-paper);
+    --color-mist: #1b1d24;
+    --color-line: #33353d;
+    --color-mute: #9a9da4;
+  }
+}
+
+* {
+  border-radius: 0 !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+/* --- motion system --- */
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-slow-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-2%, 3%) scale(1.06);
+  }
+}
+
+@keyframes drift-reverse {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(3%, -2%) scale(0.95);
+  }
+}
+
+/* deliberate exception to the square system: soft ambient glows are
+   the one organic shape allowed, as a background accent only */
+.glow-orb {
+  border-radius: 9999px !important;
+}
+
+.animate-drift {
+  animation: drift 10s ease-in-out infinite;
+}
+
+.animate-drift-reverse {
+  animation: drift-reverse 12s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 18s linear infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation: spin-slow-reverse 24s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 4s ease-in-out infinite;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow,
+  .animate-spin-slow-reverse,
+  .animate-pulse-ring,
+  .animate-drift,
+  .animate-drift-reverse {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

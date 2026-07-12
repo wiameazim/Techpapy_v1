@@ -1,0 +1,157 @@
+// Local, Docker-free dev database. Same models as schema.prisma, only the
+// datasource differs (SQLite file instead of PostgreSQL) — used when no
+// Docker/Postgres is available on the machine. Not used in CI/production.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SkillType {
+  OFFERED
+  WANTED
+}
+
+enum MatchStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  points       Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  skills        Skill[]
+  refreshTokens RefreshToken[]
+  ledgerEntries PointsLedger[]
+  badges        UserBadge[]
+  articles      KnowledgeArticle[]
+  auditLogs     AuditLog[]
+
+  matchesAsA Match[] @relation("MatchUserA")
+  matchesAsB Match[] @relation("MatchUserB")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Skill {
+  id        String    @id @default(uuid())
+  name      String
+  type      SkillType
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Match {
+  id        String      @id @default(uuid())
+  userAId   String
+  userBId   String
+  userA     User        @relation("MatchUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User        @relation("MatchUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  status    MatchStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+
+  sessions Session[]
+
+  @@index([userAId])
+  @@index([userBId])
+}
+
+model Session {
+  id          String        @id @default(uuid())
+  matchId     String
+  match       Match         @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  status      SessionStatus @default(SCHEDULED)
+  createdAt   DateTime      @default(now())
+
+  @@index([matchId])
+}
+
+model PointsLedger {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Badge {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  userId     String
+  badgeId    String
+  awardedAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge      Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+}
+
+model KnowledgeArticle {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+}

@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+build/
+.next/
+out/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+docker/data/
+apps/api/prisma/sqlite/dev.db
+apps/api/prisma/sqlite/dev.db-journal
