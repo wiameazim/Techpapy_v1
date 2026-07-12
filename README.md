@@ -2,6 +2,10 @@
 
 Échange intergénérationnel — mettre en relation jeunes et seniors pour des échanges de compétences mutuels.
 
+📄 [Documentation fonctionnelle](DOCUMENTATION_FONCTIONNELLE.md) ·
+📄 [Documentation technique](DOCUMENTATION_TECHNIQUE.md) ·
+☁️ [Guide de déploiement GCP](DEPLOIEMENT_GCP.md)
+
 ## Stack
 
 - **Frontend** — Next.js (App Router) + TypeScript + Tailwind, style 2 couleurs strict (`ink` / `signal`), sans arrondis.
