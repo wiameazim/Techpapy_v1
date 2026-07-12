@@ -10,6 +10,7 @@ import { CommunityPanel } from "@/components/dashboard/community-panel";
 import { MatchesPanel } from "@/components/dashboard/matches-panel";
 import { PointsHistory } from "@/components/dashboard/points-history";
 import { BadgesPanel } from "@/components/dashboard/badges-panel";
+import { CalendarView, type CalendarSession } from "@/components/dashboard/calendar-view";
 import {
   api,
   type BadgeCatalogueEntry,
@@ -91,6 +92,16 @@ export default function DashboardPage() {
     .flatMap((m) => m.sessions)
     .filter((s) => s.status === "SCHEDULED").length;
 
+  const calendarSessions: CalendarSession[] = matches.flatMap((m) => {
+    const other = m.userAId === user.id ? m.userB : m.userA;
+    return m.sessions.map((s) => ({
+      id: s.id,
+      scheduledAt: s.scheduledAt,
+      status: s.status,
+      otherName: other.name,
+    }));
+  });
+
   const stats = [
     { label: "Points d'échange", value: String(user.points) },
     { label: "Sessions à venir", value: String(upcomingSessions) },
@@ -135,6 +146,10 @@ export default function DashboardPage() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <SkillsPanel mySkills={mySkills} onAdd={onAddSkill} onDelete={onDeleteSkill} />
           <CommunityPanel offered={communityOffered} wanted={communityWanted} onMatch={onMatch} />
+        </div>
+
+        <div className="mt-6">
+          <CalendarView sessions={calendarSessions} />
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
