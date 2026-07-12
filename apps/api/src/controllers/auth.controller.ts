@@ -7,10 +7,17 @@ import * as authService from "../services/auth.service";
 
 const REFRESH_COOKIE = "refreshToken";
 
+const isProduction = env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  secure: env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  secure: isProduction,
+  // Frontend and API are deployed on different subdomains in production
+  // (e.g. Cloud Run), so the cookie must be sendable cross-site. This is
+  // safe because it requires Secure, and CORS + the X-Requested-With
+  // guard already block cross-origin abuse of the cookie-authenticated
+  // routes.
+  sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
   path: "/api/auth",
   maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
 };
