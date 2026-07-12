@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardLabel } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,12 @@ export default function DashboardPage() {
           Tech<span className="bg-signal px-1 text-ink">Papy</span>
         </span>
         <div className="flex items-center gap-4">
+          <Link
+            href="/knowledge"
+            className="text-sm font-bold uppercase tracking-wide hover:text-signal"
+          >
+            Base de connaissances
+          </Link>
           <span className="text-sm font-semibold text-mute">{user.name}</span>
           <Button variant="ghost" onClick={onLogout}>
             Déconnexion

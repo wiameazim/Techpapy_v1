@@ -95,6 +95,16 @@ export type BadgeCatalogueEntry = {
   pointsRequired: number;
 };
 
+export type Article = {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  author: { id: string; name: string };
+  createdAt: string;
+  updatedAt: string;
+};
+
 async function withToken(promise: Promise<AuthResponse>) {
   const result = await promise;
   setAccessToken(result.accessToken);
@@ -153,4 +163,14 @@ export const api = {
     request<{ session: SessionItem }>(`/api/sessions/${id}/complete`, {
       method: "PATCH",
     }),
+
+  listArticles: (q?: string) =>
+    request<{ articles: Article[] }>(`/api/articles${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  getArticle: (id: string) => request<{ article: Article }>(`/api/articles/${id}`),
+  createArticle: (data: { title: string; content: string }) =>
+    request<{ article: Article }>("/api/articles", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteArticle: (id: string) => request<void>(`/api/articles/${id}`, { method: "DELETE" }),
 };
