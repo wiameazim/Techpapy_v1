@@ -13,3 +13,6 @@ Thumbs.db
 docker/data/
 apps/api/prisma/sqlite/dev.db
 apps/api/prisma/sqlite/dev.db-journal
+~$*.pptx
+~$*.docx
+~$*.xlsx
