@@ -1,0 +1,11 @@
+project_id          = "tachpapy"
+region              = "europe-west1"
+db_password         = "change-me"
+jwt_access_secret   = "change-me-32-chars-minimum-please"
+jwt_refresh_secret  = "change-me-different-32-chars-please"
+custom_domain       = "techpapy.fr"
+
+# Filled in by CI after building/pushing images; leave empty for the
+# first `terraform apply` (a Google placeholder image is used instead).
+api_image = ""
+web_image = ""

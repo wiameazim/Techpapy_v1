@@ -13,7 +13,7 @@
 - **Sécurité** — bcrypt, helmet, CORS strict, rate limiting, sanitisation des entrées, CSRF header guard, logs d'audit.
 - **Monitoring** — Prometheus (métriques `/metrics`), Grafana (dashboards provisionnés), Loki + Promtail (logs centralisés).
 - **CI/CD** — GitHub Actions (lint, tests avec coverage, build, images Docker vers GHCR) + workflow de déploiement avec rollback.
-- **Infra** — Docker / docker-compose pour le dev local, squelette Terraform (`infra/terraform`) pour l'ECR AWS.
+- **Infra** — Docker / docker-compose pour le dev local ; Terraform (`infra/terraform`) pour Google Cloud (Cloud Run, Cloud SQL, Artifact Registry) en alternative aux commandes manuelles de [DEPLOIEMENT_GCP.docx](DEPLOIEMENT_GCP.docx).
 
 ## Structure
 
@@ -24,7 +24,7 @@ apps/
 docker/
   prometheus/, grafana/, loki/, promtail/   configuration de l'observabilité
 infra/
-  terraform/   squelette IaC (ECR)
+  terraform/   IaC GCP (Cloud Run, Cloud SQL, Artifact Registry)
 .github/workflows/  CI (ci.yml) et déploiement (deploy.yml)
 ```
 
@@ -100,6 +100,19 @@ docker compose up --build
 ```bash
 npm run test --workspace=apps/api   # nécessite Postgres (voir docker-compose)
 ```
+
+## Infrastructure as Code (Terraform)
+
+`infra/terraform` décrit l'infrastructure GCP (Cloud Run x2, Cloud SQL, Artifact Registry) en alternative aux commandes manuelles de `DEPLOIEMENT_GCP.docx` :
+
+```bash
+cd infra/terraform
+cp terraform.tfvars.example terraform.tfvars   # renseigner les valeurs
+terraform init
+terraform apply
+```
+
+Non testé avec `terraform plan`/`apply` réels dans ce dépôt (Terraform CLI non disponible dans cet environnement) — à valider avant usage.
 
 ## Domaine (Prisma)
 
