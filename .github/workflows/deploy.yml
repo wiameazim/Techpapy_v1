@@ -1,51 +1,89 @@
-name: Deploy
+name: Deploy to Cloud Run
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
-      environment:
-        description: Target environment
-        required: true
-        type: choice
-        options: [staging, production]
-      image_tag:
-        description: Image tag to deploy (defaults to current commit SHA)
-        required: false
-        type: string
       rollback:
-        description: Roll back to the previous revision instead of deploying image_tag
+        description: Roll back both services to their previous revision instead of deploying
         required: false
         type: boolean
         default: false
 
+env:
+  REGION: europe-west1
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: production
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p "$HOME/.kube"
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Roll back previous revision
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Roll back to the previous revision
         if: ${{ inputs.rollback }}
         run: |
-          kubectl -n techpapy-${{ inputs.environment }} rollout undo deployment/api
-          kubectl -n techpapy-${{ inputs.environment }} rollout undo deployment/web
-          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/api
-          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/web
+          for service in techpapy-api techpapy-web; do
+            prev=$(gcloud run revisions list --service="$service" --region="$REGION" \
+              --format="value(name)" --sort-by="~metadata.creationTimestamp" | sed -n 2p)
+            gcloud run services update-traffic "$service" --region="$REGION" \
+              --to-revisions="$prev=100"
+          done
 
-      - name: Deploy image tag
+      - name: Configure Docker for Artifact Registry
         if: ${{ !inputs.rollback }}
-        env:
-          TAG: ${{ inputs.image_tag || github.sha }}
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and push API image
+        if: ${{ !inputs.rollback }}
         run: |
-          kubectl -n techpapy-${{ inputs.environment }} set image deployment/api \
-            api=ghcr.io/${{ github.repository }}/api:$TAG
-          kubectl -n techpapy-${{ inputs.environment }} set image deployment/web \
-            web=ghcr.io/${{ github.repository }}/web:$TAG
-          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/api
-          kubectl -n techpapy-${{ inputs.environment }} rollout status deployment/web
+          docker build -f apps/api/Dockerfile \
+            -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/api:${{ github.sha }} .
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/api:${{ github.sha }}
+
+      - name: Deploy API to Cloud Run
+        if: ${{ !inputs.rollback }}
+        run: |
+          gcloud run deploy techpapy-api \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/api:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --allow-unauthenticated \
+            --session-affinity \
+            --add-cloudsql-instances=${{ secrets.GCP_SQL_CONNECTION_NAME }} \
+            --update-env-vars="NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }},JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }},ACCESS_TOKEN_TTL=15m,REFRESH_TOKEN_TTL_DAYS=30,CORS_ORIGIN=${{ secrets.WEB_URL }}"
+
+      - name: Run database migrations
+        if: ${{ !inputs.rollback }}
+        run: |
+          curl -sSL -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.11.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy "${{ secrets.GCP_SQL_CONNECTION_NAME }}" &
+          sleep 5
+          npm ci --workspace=apps/api --include-workspace-root
+          DATABASE_URL="${{ secrets.MIGRATE_DATABASE_URL }}" \
+            npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+
+      - name: Build and push web image
+        if: ${{ !inputs.rollback }}
+        run: |
+          docker build -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.API_URL }} \
+            -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/web:${{ github.sha }} .
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/web:${{ github.sha }}
+
+      - name: Deploy web to Cloud Run
+        if: ${{ !inputs.rollback }}
+        run: |
+          gcloud run deploy techpapy-web \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/techpapy/web:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --allow-unauthenticated
