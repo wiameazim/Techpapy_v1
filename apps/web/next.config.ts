@@ -1,17 +1,10 @@
 import type { NextConfig } from "next";
 
-// Proxies /api/* through this Next.js server to the backend, so the browser
-// only ever talks to this site's own origin. Without this, the API lives on
-// a different registrable domain (e.g. Cloud Run's *.run.app), which makes
-// the refresh-token cookie a third-party cookie — browsers increasingly
-// block those by default, silently breaking session refresh in production.
-const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://localhost:4000";
-
+// /api/* is proxied to the backend by app/api/[...path]/route.ts (a route
+// handler, not a next.config rewrite — rewrites weren't taking effect under
+// Turbopack + output: "standalone" on Next.js 16.2).
 const nextConfig: NextConfig = {
   output: "standalone",
-  async rewrites() {
-    return [{ source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` }];
-  },
 };
 
 export default nextConfig;
